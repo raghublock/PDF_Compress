@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro PDF Tool - Raghuveer</title>
+    <title>Pro PDF Tool - Raghuveer (Complete)</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -12,23 +12,11 @@
     <style>
         :root { --primary: #4f46e5; --bg: #f3f4f6; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 600px; text-align: center; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 700px; text-align: center; }
         
-        /* Print styles for better PDF printing */
         @media print {
-            body { 
-                margin: 0; 
-                padding: 0;
-                background: white;
-            }
-            .no-print {
-                display: none !important;
-            }
-            /* Ensure content fits on page */
-            embed, iframe, object {
-                max-width: 100% !important;
-                max-height: 100% !important;
-            }
+            body { margin: 0; padding: 0; background: white; }
+            .no-print { display: none !important; }
         }
         
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
@@ -84,7 +72,6 @@
         .split-page { width: 60px; height: 80px; border: 2px solid #e5e7eb; border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem; }
         .split-page.selected { border-color: var(--primary); background: #eef2ff; }
         
-        /* Print info box */
         .print-info {
             background: #fef3c7;
             border-left: 4px solid #f59e0b;
@@ -93,24 +80,85 @@
             border-radius: 8px;
             font-size: 0.85rem;
         }
+        
+        /* Smart Compress Styles */
+        .compress-level-card {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .level-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .level-option:hover {
+            border-color: var(--primary);
+            background: #f5f3ff;
+        }
+        .level-option.selected {
+            border-color: var(--primary);
+            background: #eef2ff;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+        }
+        .level-option h4 {
+            margin: 0 0 5px 0;
+            font-size: 1rem;
+        }
+        .level-option p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        .size-badge {
+            background: #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid var(--primary);
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        .size-comparison {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .original-size { color: #dc2626; }
+        .compressed-size { color: #10b981; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🛠️ All-in-One PDF Pro v3.0</h2>
+    <h2>🛠️ Pro PDF Tool v4.0</h2>
     <p style="color: #666; margin-top: -10px;">Raghuveer ka Advanced PDF Tool</p>
     
     <div class="tabs">
         <button class="tab-btn active" id="btn-jpg-to-pdf" onclick="setMode('jpg-to-pdf')">📸 JPG to PDF</button>
-        <button class="tab-btn" id="btn-compress" onclick="setMode('compress')">📦 Compress</button>
+        <button class="tab-btn" id="btn-compress" onclick="setMode('compress')">📦 Smart Compress</button>
         <button class="tab-btn" id="btn-pdf-to-jpg" onclick="setMode('pdf-to-jpg')">🖼️ PDF to JPG</button>
         <button class="tab-btn" id="btn-split" onclick="setMode('split')">✂️ Split PDF</button>
         <button class="tab-btn" id="btn-merge" onclick="setMode('merge')">🔗 Merge PDF</button>
     </div>
 
     <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <p id="upload-label">📤 Select Multiple JPG/PNG Files</p>
+        <p id="upload-label">📸 Select Multiple JPG/PNG Files</p>
         <p style="font-size: 0.8rem; color: #666;">Ya drag & drop karo</p>
         <input type="file" id="fileInput" hidden onchange="handleFileSelect()" multiple>
     </div>
@@ -131,54 +179,66 @@
             <option value="4">4 images per page</option>
         </select>
         
-        <!-- NEW: Print optimization option -->
         <div class="checkbox-group" style="margin-top: 10px;">
             <label><input type="checkbox" id="optimizeForPrint" checked> 🖨️ Optimize for Print (Auto-fit to page)</label>
         </div>
         
-        <div class="print-info" id="printInfoMsg">
+        <div class="print-info">
             💡 <strong>Print Karne Ka Sahi Tarika:</strong><br>
             Jab PDF open ho, <strong>right-click → Print</strong> karein, ya <strong>Ctrl+P</strong> press karein.<br>
             Print dialogue mein <strong>"Fit to Page"</strong> ya <strong>"Scale to Fit"</strong> option select karein.
         </div>
     </div>
 
-    <!-- Compress PDF Options -->
+    <!-- SMART COMPRESS PDF Options - IMPROVED -->
     <div id="compress-controls" class="control-group" style="display:none;">
-        <h4 style="margin-top: 0;">📦 Compression Settings</h4>
+        <h4 style="margin-top: 0;">📦 Smart PDF Compression</h4>
         
-        <div class="checkbox-group">
-            <label><input type="radio" name="compressMode" value="quality" checked> Quality based</label>
-            <label><input type="radio" name="compressMode" value="size"> Target size</label>
+        <div class="info-box">
+            💡 <strong>Smart Compression:</strong> Text quality preserve rahegi, sirf images compress hongi. Fonts aur text bilkul sharp rahenge!
         </div>
         
-        <div id="quality-control">
-            <label>Quality: <span id="q-val">75</span>%</label>
-            <input type="range" id="quality" min="10" max="95" value="75" oninput="document.getElementById('q-val').innerText=this.value">
-        </div>
-        
-        <div id="size-control" style="display:none;">
-            <label>Target Size:</label>
-            <div class="size-input-group">
-                <input type="number" id="targetSize" value="500" min="10" max="10000">
-                <select id="sizeUnit">
-                    <option value="KB">KB</option>
-                    <option value="MB">MB</option>
-                </select>
+        <label>🎯 Compression Level:</label>
+        <div class="compress-level-card">
+            <div class="level-option" data-level="low" onclick="selectCompressLevel('low')">
+                <h4>🟢 Low</h4>
+                <p>20-30% size reduce</p>
+                <p style="font-size:0.7rem; color:#10b981;">Best Quality</p>
+                <span class="size-badge">Image: 90%</span>
             </div>
-            <p style="font-size: 0.8rem; color: #666;">📝 Note: Exact size guarantee nahi hai, approximate hoga</p>
+            <div class="level-option selected" data-level="medium" onclick="selectCompressLevel('medium')">
+                <h4>🟡 Medium</h4>
+                <p>40-60% size reduce</p>
+                <p style="font-size:0.7rem; color:#f59e0b;">Balanced</p>
+                <span class="size-badge">Image: 75%</span>
+            </div>
+            <div class="level-option" data-level="high" onclick="selectCompressLevel('high')">
+                <h4>🔴 High</h4>
+                <p>70-80% size reduce</p>
+                <p style="font-size:0.7rem; color:#ef4444;">Small Size</p>
+                <span class="size-badge">Image: 50%</span>
+            </div>
         </div>
         
-        <label>Compression Type:</label>
-        <select id="compressType">
-            <option value="standard">Standard (Recommended)</option>
-            <option value="maximum">Maximum (Small size)</option>
-            <option value="preserve">Preserve Text</option>
-        </select>
+        <div style="margin: 15px 0;">
+            <label>🎨 Image Quality:</label>
+            <input type="range" id="imageQuality" min="30" max="100" value="75" oninput="updateQualityLabel()">
+            <span id="qualityLabel">75%</span>
+        </div>
         
         <div class="checkbox-group">
-            <label><input type="checkbox" id="removeMetadata"> Remove Metadata</label>
-            <label><input type="checkbox" id="optimizeImages"> Optimize Images</label>
+            <label><input type="checkbox" id="removeMetadata" checked> 🗑️ Remove Metadata (Author, Date, etc.)</label>
+            <label><input type="checkbox" id="compressImages" checked> 🖼️ Compress Images</label>
+            <label><input type="checkbox" id="removeUnused" checked> 🧹 Remove Unused Objects</label>
+        </div>
+        
+        <div class="checkbox-group">
+            <label><input type="checkbox" id="linearizePdf"> ⚡ Linearize PDF (Web Optimized)</label>
+        </div>
+        
+        <div id="sizeComparison" class="size-comparison" style="display: none;">
+            <div>📄 Original: <span id="originalSizeDisplay" class="original-size">-</span></div>
+            <div>✨ Estimated: <span id="estimatedSizeDisplay" class="compressed-size">-</span></div>
         </div>
     </div>
 
@@ -277,10 +337,10 @@
     </div>
     
     <div id="successMessage" class="success-message">
-        ✅ Processing Complete! New tab mein open hoga...
+        ✅ Processing Complete! Download start ho jayega...
     </div>
     
-    <button class="btn-main" id="processBtn" onclick="startProcessing()">✨ Process & Open in New Tab</button>
+    <button class="btn-main" id="processBtn" onclick="startProcessing()">✨ Process</button>
 </div>
 
 <script>
@@ -288,32 +348,68 @@
     let mode = 'jpg-to-pdf';
     let selectedPages = new Set();
     let mergeFiles = [];
+    let currentCompressLevel = 'medium';
+    let originalFileSize = 0;
+    
+    // Compression presets
+    const compressPresets = {
+        low: { imageQuality: 0.9 },
+        medium: { imageQuality: 0.75 },
+        high: { imageQuality: 0.5 }
+    };
+    
+    function selectCompressLevel(level) {
+        currentCompressLevel = level;
+        document.querySelectorAll('.level-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelector(`.level-option[data-level="${level}"]`).classList.add('selected');
+        
+        const preset = compressPresets[level];
+        document.getElementById('imageQuality').value = preset.imageQuality * 100;
+        updateQualityLabel();
+    }
+    
+    function updateQualityLabel() {
+        const val = document.getElementById('imageQuality').value;
+        document.getElementById('qualityLabel').innerText = val + '%';
+        if (originalFileSize > 0) estimateCompressedSize();
+    }
+    
+    function estimateCompressedSize() {
+        const quality = document.getElementById('imageQuality').value / 100;
+        let reduction = quality > 0.8 ? 0.2 : (quality > 0.6 ? 0.4 : (quality > 0.4 ? 0.6 : 0.75));
+        if (document.getElementById('removeMetadata').checked) reduction += 0.05;
+        if (document.getElementById('removeUnused').checked) reduction += 0.1;
+        reduction = Math.min(reduction, 0.85);
+        const estimatedSize = originalFileSize * (1 - reduction);
+        document.getElementById('estimatedSizeDisplay').innerHTML = formatFileSize(estimatedSize);
+        document.getElementById('sizeComparison').style.display = 'flex';
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
 
-    // Toggle between quality and size mode for compression
+    // Toggle compress mode
     document.querySelectorAll('input[name="compressMode"]').forEach(radio => {
         radio.addEventListener('change', function() {
-            document.getElementById('quality-control').style.display = 
-                this.value === 'quality' ? 'block' : 'none';
-            document.getElementById('size-control').style.display = 
-                this.value === 'size' ? 'block' : 'none';
+            document.getElementById('quality-control').style.display = this.value === 'quality' ? 'block' : 'none';
+            document.getElementById('size-control').style.display = this.value === 'size' ? 'block' : 'none';
         });
     });
 
     // Toggle split mode controls
     document.querySelectorAll('input[name="splitMode"]').forEach(radio => {
         radio.addEventListener('change', function() {
-            document.getElementById('rangeSplitControl').style.display = 
-                this.value === 'range' ? 'block' : 'none';
-            document.getElementById('everySplitControl').style.display = 
-                this.value === 'every' ? 'block' : 'none';
-            document.getElementById('extractSplitControl').style.display = 
-                this.value === 'extract' ? 'block' : 'none';
+            document.getElementById('rangeSplitControl').style.display = this.value === 'range' ? 'block' : 'none';
+            document.getElementById('everySplitControl').style.display = this.value === 'every' ? 'block' : 'none';
+            document.getElementById('extractSplitControl').style.display = this.value === 'extract' ? 'block' : 'none';
         });
     });
 
-    // Drag & Drop functionality
+    // Drag & Drop
     const dropZone = document.getElementById('dropZone');
-    
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
     });
@@ -324,20 +420,12 @@
     }
 
     ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, highlight, false);
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
     });
 
     ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, unhighlight, false);
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
     });
-
-    function highlight() {
-        dropZone.classList.add('dragover');
-    }
-
-    function unhighlight() {
-        dropZone.classList.remove('dragover');
-    }
 
     dropZone.addEventListener('drop', handleDrop, false);
 
@@ -347,9 +435,7 @@
         
         if (mode === 'merge') {
             for (let file of files) {
-                if (file.type === 'application/pdf') {
-                    mergeFiles.push(file);
-                }
+                if (file.type === 'application/pdf') mergeFiles.push(file);
             }
             updateMergeFileList();
         } else {
@@ -384,15 +470,12 @@
         if (m === 'merge') {
             document.getElementById('fileInput').accept = '.pdf';
             document.getElementById('fileInput').multiple = true;
-            document.getElementById('dropZone').style.display = 'block';
         } else if (m === 'split') {
             document.getElementById('fileInput').accept = '.pdf';
             document.getElementById('fileInput').multiple = false;
-            document.getElementById('dropZone').style.display = 'block';
         } else {
             document.getElementById('fileInput').accept = (m === 'jpg-to-pdf') ? 'image/*' : '.pdf';
             document.getElementById('fileInput').multiple = (m === 'jpg-to-pdf');
-            document.getElementById('dropZone').style.display = 'block';
         }
         
         resetStats();
@@ -423,7 +506,7 @@
         
         let totalSize = 0;
         for(let f of mergeFiles) totalSize += f.size;
-        document.getElementById('orig-size').innerText = "📦 Total: " + (totalSize / 1024).toFixed(2) + " KB";
+        document.getElementById('orig-size').innerHTML = "📦 Total: " + (totalSize / 1024).toFixed(2) + " KB";
     }
 
     function removeMergeFile(index) {
@@ -435,9 +518,7 @@
         if (mode === 'merge') {
             const files = document.getElementById('fileInput').files;
             for (let file of files) {
-                if (file.type === 'application/pdf') {
-                    mergeFiles.push(file);
-                }
+                if (file.type === 'application/pdf') mergeFiles.push(file);
             }
             updateMergeFileList();
             document.getElementById('fileInput').value = '';
@@ -448,19 +529,13 @@
                 document.getElementById('file-count').innerText = "📄 Files: " + files.length;
                 let totalSize = 0;
                 for(let f of files) totalSize += f.size;
-                document.getElementById('orig-size').innerText = "📦 Total: " + (totalSize / 1024).toFixed(2) + " KB";
+                originalFileSize = totalSize;
+                document.getElementById('orig-size').innerHTML = "📦 Size: " + formatFileSize(totalSize);
+                document.getElementById('originalSizeDisplay').innerHTML = formatFileSize(totalSize);
                 
-                if (mode === 'split' && files[0].type === 'application/pdf') {
-                    showSplitPreview(files[0]);
-                }
-                
-                if (mode === 'pdf-to-jpg' && files[0].type === 'application/pdf') {
-                    showPdfPreview(files[0]);
-                }
-                
-                if (mode === 'compress') {
-                    estimateCompressedSize(files[0]);
-                }
+                if (mode === 'split' && files[0].type === 'application/pdf') showSplitPreview(files[0]);
+                if (mode === 'pdf-to-jpg' && files[0].type === 'application/pdf') showPdfPreview(files[0]);
+                if (mode === 'compress') estimateCompressedSize();
             }
         }
     }
@@ -568,6 +643,7 @@
         document.getElementById('progressBar').style.display = 'none';
         document.getElementById('pagePreview').style.display = 'none';
         document.getElementById('successMessage').style.display = 'none';
+        document.getElementById('sizeComparison').style.display = 'none';
         if (mode === 'merge') {
             mergeFiles = [];
             updateMergeFileList();
@@ -584,18 +660,14 @@
     function showSuccessMessage() {
         const msg = document.getElementById('successMessage');
         msg.style.display = 'block';
-        setTimeout(() => {
-            msg.style.display = 'none';
-        }, 3000);
+        setTimeout(() => msg.style.display = 'none', 3000);
     }
 
     async function startProcessing() {
         let files;
         
         if (mode === 'merge') {
-            if (mergeFiles.length < 2) {
-                return alert("❌ Bhai, merge karne ke liye kam se kam 2 PDF files select karo!");
-            }
+            if (mergeFiles.length < 2) return alert("❌ Bhai, merge karne ke liye kam se kam 2 PDF files select karo!");
             files = mergeFiles;
         } else {
             files = document.getElementById('fileInput').files;
@@ -613,75 +685,53 @@
                 const imagesPerPage = parseInt(document.getElementById('imagesPerPage').value);
                 const pageSize = document.querySelector('input[name="pageSize"]:checked').value;
                 const optimizeForPrint = document.getElementById('optimizeForPrint').checked;
-                
                 const pdfBytes = await convertImagesToPdf(files, imagesPerPage, pageSize, optimizeForPrint);
-                showSuccessMessage();
-                openInNewTab(pdfBytes, 'converted.pdf', 'application/pdf');
+                downloadPdf(pdfBytes, 'converted.pdf');
             } 
             else if (mode === 'compress') {
-                const compressMode = document.querySelector('input[name="compressMode"]:checked').value;
-                let quality = 75;
-                
-                if (compressMode === 'quality') {
-                    quality = document.getElementById('quality').value / 100;
-                } else {
-                    const targetSize = parseFloat(document.getElementById('targetSize').value);
-                    const unit = document.getElementById('sizeUnit').value;
-                    const targetBytes = unit === 'KB' ? targetSize * 1024 : targetSize * 1024 * 1024;
-                    quality = Math.min(0.95, Math.max(0.1, targetBytes / files[0].size));
-                }
-                
-                const compressType = document.getElementById('compressType').value;
+                const imageQuality = document.getElementById('imageQuality').value / 100;
                 const removeMetadata = document.getElementById('removeMetadata').checked;
+                const compressImages = document.getElementById('compressImages').checked;
+                const removeUnused = document.getElementById('removeUnused').checked;
+                const linearize = document.getElementById('linearizePdf').checked;
                 
-                const pdfBytes = await compressPdf(files[0], quality, compressType, removeMetadata);
-                showSuccessMessage();
-                openInNewTab(pdfBytes, 'compressed.pdf', 'application/pdf');
+                const pdfBytes = await smartCompressPdf(files[0], {
+                    imageQuality, removeMetadata, compressImages, removeUnused, linearize
+                });
+                downloadPdf(pdfBytes, 'compressed.pdf');
             } 
             else if (mode === 'pdf-to-jpg') {
                 const quality = document.getElementById('jpgQuality').value / 100;
                 const format = document.getElementById('imageFormat').value;
                 const pageRange = document.getElementById('pageRange').value;
-                
                 let pagesToConvert = [];
                 if (pageRange === 'custom' && selectedPages.size > 0) {
                     pagesToConvert = Array.from(selectedPages).sort((a,b) => a - b);
                 }
-                
                 const zipBlob = await extractImagesFromPdf(files[0], quality, format, pagesToConvert);
-                showSuccessMessage();
                 saveAs(zipBlob, 'extracted-images.zip');
+                showSuccessMessage();
             }
             else if (mode === 'split') {
                 const splitMode = document.querySelector('input[name="splitMode"]:checked').value;
                 const createZip = document.getElementById('createZipForSplit').checked;
-                
-                if (splitMode === 'extract' && selectedPages.size === 0) {
-                    return alert("❌ Koi page select nahi kiya!");
-                }
-                
+                if (splitMode === 'extract' && selectedPages.size === 0) return alert("❌ Koi page select nahi kiya!");
                 const result = await splitPdf(files[0], splitMode, createZip);
-                
                 if (createZip) {
                     saveAs(result, 'split-pages.zip');
                 } else {
-                    showSuccessMessage();
-                    openInNewTab(result, 'split-page.pdf', 'application/pdf');
+                    downloadPdf(result, 'split-page.pdf');
                 }
             }
             else if (mode === 'merge') {
                 const order = document.getElementById('mergeOrder').value;
                 const addBookmarks = document.getElementById('addBookmarks').checked;
-                
                 const pdfBytes = await mergePdfs(files, order, addBookmarks);
-                showSuccessMessage();
-                openInNewTab(pdfBytes, 'merged.pdf', 'application/pdf');
+                downloadPdf(pdfBytes, 'merged.pdf');
             }
             
             updateProgress(100);
-            setTimeout(() => {
-                document.getElementById('progressBar').style.display = 'none';
-            }, 1000);
+            showSuccessMessage();
             
         } catch (e) {
             alert("❌ Kuch gadbad hui: " + e.message);
@@ -689,164 +739,161 @@
         } finally {
             loader.style.display = 'none';
             btn.disabled = false;
+            setTimeout(() => document.getElementById('progressBar').style.display = 'none', 1000);
         }
     }
 
-    // UPDATED: JPG to PDF with print optimization
+    // SMART COMPRESS FUNCTION - Text quality preserve
+    async function smartCompressPdf(file, options) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+        
+        updateProgress(20);
+        
+        if (options.removeMetadata) {
+            pdfDoc.setTitle('');
+            pdfDoc.setAuthor('');
+            pdfDoc.setSubject('');
+            pdfDoc.setKeywords([]);
+            pdfDoc.setProducer('Raghuveer PDF Tool');
+            pdfDoc.setCreator('Raghuveer PDF Compressor');
+        }
+        
+        updateProgress(40);
+        
+        if (options.compressImages) {
+            const pages = pdfDoc.getPages();
+            let processed = 0;
+            
+            for (const page of pages) {
+                const resources = page.node.Resources();
+                if (resources && resources.XObject) {
+                    const xObjectKeys = resources.XObject.keys();
+                    
+                    for (const key of xObjectKeys) {
+                        const xObject = resources.XObject.get(key);
+                        
+                        try {
+                            if (xObject.constructor.name === 'PDFImage') {
+                                const image = xObject;
+                                const imageBytes = await image.getBytes();
+                                
+                                const img = new Image();
+                                const imageUrl = URL.createObjectURL(new Blob([imageBytes], { type: 'image/jpeg' }));
+                                
+                                await new Promise((resolve) => {
+                                    img.onload = async () => {
+                                        let newWidth = img.width;
+                                        let newHeight = img.height;
+                                        const maxDimension = 1200;
+                                        if (newWidth > maxDimension || newHeight > maxDimension) {
+                                            if (newWidth > newHeight) {
+                                                newHeight = (newHeight * maxDimension) / newWidth;
+                                                newWidth = maxDimension;
+                                            } else {
+                                                newWidth = (newWidth * maxDimension) / newHeight;
+                                                newHeight = maxDimension;
+                                            }
+                                        }
+                                        
+                                        const canvas = document.createElement('canvas');
+                                        canvas.width = newWidth;
+                                        canvas.height = newHeight;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.drawImage(img, 0, 0, newWidth, newHeight);
+                                        
+                                        const compressedDataUrl = canvas.toDataURL('image/jpeg', options.imageQuality);
+                                        const compressedBytes = atob(compressedDataUrl.split(',')[1]);
+                                        const compressedArray = new Uint8Array(compressedBytes.length);
+                                        for (let i = 0; i < compressedBytes.length; i++) {
+                                            compressedArray[i] = compressedBytes.charCodeAt(i);
+                                        }
+                                        
+                                        const newImage = await pdfDoc.embedJpg(compressedArray);
+                                        const imageRef = pdfDoc.context.register(newImage);
+                                        resources.XObject.set(key, imageRef);
+                                        
+                                        URL.revokeObjectURL(imageUrl);
+                                        resolve();
+                                    };
+                                    img.src = imageUrl;
+                                });
+                            }
+                        } catch(e) { console.log('Could not compress image:', e); }
+                    }
+                }
+                processed++;
+                updateProgress(40 + (processed / pages.length) * 40);
+            }
+        }
+        
+        updateProgress(85);
+        
+        const saveOptions = { useObjectStreams: true, addDefaultPage: false, objectsPerTick: 50 };
+        if (options.removeUnused) saveOptions.updateMetadata = false;
+        
+        let pdfBytes = await pdfDoc.save(saveOptions);
+        
+        updateProgress(95);
+        
+        if (options.linearize) {
+            try {
+                const linearizedPdf = await PDFLib.PDFDocument.load(pdfBytes);
+                pdfBytes = await linearizedPdf.save({ useObjectStreams: true });
+            } catch(e) {}
+        }
+        
+        return pdfBytes;
+    }
+
+    // JPG to PDF
     async function convertImagesToPdf(files, imagesPerPage, pageSize, optimizeForPrint) {
         const pdfDoc = await PDFLib.PDFDocument.create();
+        const PAGE_SIZES = { a4: { width: 595, height: 842 }, letter: { width: 612, height: 792 } };
         
-        // Standard page sizes in points (1 point = 1/72 inch)
-        const PAGE_SIZES = {
-            a4: { width: 595, height: 842 },      // A4 in points
-            letter: { width: 612, height: 792 },   // Letter in points
-            auto: null
-        };
-        
-        // If optimize for print is ON, use standard page size
-        const useStandardSize = optimizeForPrint && pageSize !== 'auto';
-        
-        const getPageDimensions = (imgWidth, imgHeight) => {
-            if (useStandardSize && pageSize !== 'auto') {
-                return PAGE_SIZES[pageSize];
-            }
-            
-            switch(pageSize) {
-                case 'a4': return { width: 595, height: 842 };
-                case 'letter': return { width: 612, height: 792 };
-                default: return { width: imgWidth, height: imgHeight };
-            }
-        };
-
         let pageImages = [];
         
         for (let i = 0; i < files.length; i++) {
             updateProgress((i / files.length) * 100);
-            
-            const file = files[i];
-            const bytes = await file.arrayBuffer();
-            let img;
-            
-            if (file.type.includes('png')) {
-                img = await pdfDoc.embedPng(bytes);
-            } else {
-                img = await pdfDoc.embedJpg(bytes);
-            }
-            
+            const bytes = await files[i].arrayBuffer();
+            let img = files[i].type.includes('png') ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
             pageImages.push(img);
             
             if (pageImages.length === imagesPerPage || i === files.length - 1) {
-                const maxWidth = Math.max(...pageImages.map(img => img.width));
-                const maxHeight = Math.max(...pageImages.map(img => img.height));
-                
-                const dimensions = getPageDimensions(maxWidth, maxHeight);
+                const dimensions = (optimizeForPrint && pageSize !== 'auto') ? PAGE_SIZES[pageSize] : 
+                    (pageSize !== 'auto' ? PAGE_SIZES[pageSize] : { width: img.width, height: img.height });
                 const page = pdfDoc.addPage([dimensions.width, dimensions.height]);
                 
                 const cols = imagesPerPage === 4 ? 2 : imagesPerPage;
                 const rows = Math.ceil(pageImages.length / cols);
-                
                 const cellWidth = dimensions.width / cols;
                 const cellHeight = dimensions.height / rows;
                 
-                pageImages.forEach((img, index) => {
-                    const col = index % cols;
-                    const row = Math.floor(index / cols);
-                    
-                    // Calculate scale to fit image in cell while maintaining aspect ratio
-                    let drawWidth = img.width;
-                    let drawHeight = img.height;
+                pageImages.forEach((img, idx) => {
+                    const col = idx % cols;
+                    const row = Math.floor(idx / cols);
+                    let drawWidth = img.width, drawHeight = img.height;
                     
                     if (optimizeForPrint && pageSize !== 'auto') {
-                        // Scale image to fit within cell
-                        const scale = Math.min(
-                            cellWidth / img.width,
-                            cellHeight / img.height,
-                            1.0
-                        );
+                        const scale = Math.min(cellWidth / img.width, cellHeight / img.height, 1);
                         drawWidth = img.width * scale;
                         drawHeight = img.height * scale;
                     }
                     
                     const x = col * cellWidth + (cellWidth - drawWidth) / 2;
                     const y = dimensions.height - (row + 1) * cellHeight + (cellHeight - drawHeight) / 2;
-                    
-                    page.drawImage(img, {
-                        x: Math.max(0, x),
-                        y: Math.max(0, y),
-                        width: drawWidth,
-                        height: drawHeight
-                    });
+                    page.drawImage(img, { x: Math.max(0, x), y: Math.max(0, y), width: drawWidth, height: drawHeight });
                 });
-                
                 pageImages = [];
             }
         }
-        
         return await pdfDoc.save();
     }
 
-    async function compressPdf(file, quality, compressType, removeMetadata) {
-        const arrayBuffer = await file.arrayBuffer();
-        
-        if (compressType === 'preserve') {
-            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
-            
-            if (removeMetadata) {
-                pdfDoc.setTitle('');
-                pdfDoc.setAuthor('');
-                pdfDoc.setSubject('');
-                pdfDoc.setKeywords([]);
-                pdfDoc.setProducer('');
-                pdfDoc.setCreator('');
-            }
-            
-            return await pdfDoc.save({
-                useObjectStreams: true,
-                addDefaultPage: false
-            });
-        } else {
-            const pdfDoc = await PDFLib.PDFDocument.create();
-            const originalPdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-            
-            const scale = compressType === 'maximum' ? 0.7 : 1.0;
-            
-            for (let i = 1; i <= originalPdf.numPages; i++) {
-                updateProgress((i / originalPdf.numPages) * 100);
-                
-                const page = await originalPdf.getPage(i);
-                const viewport = page.getViewport({scale: scale});
-                
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                
-                await page.render({
-                    canvasContext: context,
-                    viewport: viewport
-                }).promise;
-                
-                const imgQuality = compressType === 'maximum' ? quality * 0.7 : quality;
-                const imgData = canvas.toDataURL('image/jpeg', Math.min(imgQuality, 0.95));
-                
-                const img = await pdfDoc.embedJpg(imgData);
-                const pdfPage = pdfDoc.addPage([img.width, img.height]);
-                pdfPage.drawImage(img, {
-                    x: 0,
-                    y: 0,
-                    width: img.width,
-                    height: img.height
-                });
-            }
-            
-            return await pdfDoc.save();
-        }
-    }
-
+    // PDF to JPG
     async function extractImagesFromPdf(file, quality, format, customPages = []) {
         const arrayBuffer = await file.arrayBuffer();
         const originalPdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-        
         const zip = new JSZip();
         const imgFolder = zip.folder("extracted-images");
         
@@ -854,49 +901,31 @@
         let processed = 0;
         
         for (let i = 1; i <= originalPdf.numPages; i++) {
-            if (customPages.length > 0 && !customPages.includes(i)) {
-                continue;
-            }
+            if (customPages.length > 0 && !customPages.includes(i)) continue;
             
             updateProgress((processed / totalPages) * 100);
-            
             const page = await originalPdf.getPage(i);
             const viewport = page.getViewport({scale: 2.0});
-            
             const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
             canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({canvasContext: canvas.getContext('2d'), viewport}).promise;
             
-            await page.render({
-                canvasContext: context,
-                viewport: viewport
-            }).promise;
-            
-            let mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-            let extension = format === 'png' ? 'png' : 'jpg';
-            let imageQuality = format === 'png' ? 1.0 : quality;
-            
-            const imgData = canvas.toDataURL(mimeType, imageQuality);
-            
+            const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+            const extension = format === 'png' ? 'png' : 'jpg';
+            const imgData = canvas.toDataURL(mimeType, quality);
             const byteString = atob(imgData.split(',')[1]);
             const ab = new ArrayBuffer(byteString.length);
             const ia = new Uint8Array(ab);
-            for (let j = 0; j < byteString.length; j++) {
-                ia[j] = byteString.charCodeAt(j);
-            }
-            
+            for (let j = 0; j < byteString.length; j++) ia[j] = byteString.charCodeAt(j);
             imgFolder.file(`page-${i}.${extension}`, ab, {binary: true});
             processed++;
         }
         
-        return await zip.generateAsync({
-            type: 'blob',
-            compression: 'DEFLATE',
-            compressionOptions: { level: 6 }
-        });
+        return await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
     }
 
+    // Split PDF
     async function splitPdf(file, splitMode, createZip) {
         const arrayBuffer = await file.arrayBuffer();
         const sourcePdf = await PDFLib.PDFDocument.load(arrayBuffer);
@@ -910,60 +939,40 @@
                 const pages = Array.from(selectedPages).sort((a,b) => a - b);
                 for (let i = 0; i < pages.length; i++) {
                     updateProgress((i / pages.length) * 100);
-                    
                     const newPdf = await PDFLib.PDFDocument.create();
                     const [copiedPage] = await newPdf.copyPages(sourcePdf, [pages[i] - 1]);
                     newPdf.addPage(copiedPage);
-                    
-                    const pdfBytes = await newPdf.save();
-                    pdfFolder.file(`page-${pages[i]}.pdf`, pdfBytes);
+                    pdfFolder.file(`page-${pages[i]}.pdf`, await newPdf.save());
                 }
-            } 
-            else if (splitMode === 'every') {
+            } else if (splitMode === 'every') {
                 const every = parseInt(document.getElementById('everyPages').value);
                 const numParts = Math.ceil(totalPages / every);
-                
                 for (let part = 0; part < numParts; part++) {
                     updateProgress((part / numParts) * 100);
-                    
                     const start = part * every;
                     const end = Math.min(start + every, totalPages);
                     const pageIndices = Array.from({length: end - start}, (_, i) => start + i);
-                    
                     const newPdf = await PDFLib.PDFDocument.create();
                     const copiedPages = await newPdf.copyPages(sourcePdf, pageIndices);
                     copiedPages.forEach(page => newPdf.addPage(page));
-                    
-                    const pdfBytes = await newPdf.save();
-                    pdfFolder.file(`part-${part + 1}.pdf`, pdfBytes);
+                    pdfFolder.file(`part-${part + 1}.pdf`, await newPdf.save());
                 }
-            }
-            else {
+            } else {
                 const rangeStr = document.getElementById('splitRange').value;
                 const ranges = parsePageRanges(rangeStr, totalPages);
-                
                 for (let i = 0; i < ranges.length; i++) {
                     updateProgress((i / ranges.length) * 100);
-                    
                     const range = ranges[i];
-                    const pageIndices = Array.from(
-                        {length: range.end - range.start + 1}, 
-                        (_, idx) => range.start + idx - 1
-                    );
-                    
+                    const pageIndices = Array.from({length: range.end - range.start + 1}, (_, idx) => range.start + idx - 1);
                     const newPdf = await PDFLib.PDFDocument.create();
                     const copiedPages = await newPdf.copyPages(sourcePdf, pageIndices);
                     copiedPages.forEach(page => newPdf.addPage(page));
-                    
-                    const pdfBytes = await newPdf.save();
-                    pdfFolder.file(`pages-${range.start}-${range.end}.pdf`, pdfBytes);
+                    pdfFolder.file(`pages-${range.start}-${range.end}.pdf`, await newPdf.save());
                 }
             }
-            
             return await zip.generateAsync({type: 'blob'});
         } else {
             let pageIndices = [];
-            
             if (splitMode === 'extract') {
                 pageIndices = Array.from(selectedPages).map(p => p - 1).sort((a,b) => a - b);
             } else {
@@ -971,54 +980,39 @@
                 const ranges = parsePageRanges(rangeStr, totalPages);
                 if (ranges.length > 0) {
                     const range = ranges[0];
-                    pageIndices = Array.from(
-                        {length: range.end - range.start + 1}, 
-                        (_, idx) => range.start + idx - 1
-                    );
+                    pageIndices = Array.from({length: range.end - range.start + 1}, (_, idx) => range.start + idx - 1);
                 }
             }
-            
             const newPdf = await PDFLib.PDFDocument.create();
             const copiedPages = await newPdf.copyPages(sourcePdf, pageIndices);
             copiedPages.forEach(page => newPdf.addPage(page));
-            
             return await newPdf.save();
         }
     }
 
+    // Merge PDFs
     async function mergePdfs(files, order, addBookmarks) {
         const mergedPdf = await PDFLib.PDFDocument.create();
         
         if (order === 'sequential') {
             for (let i = 0; i < files.length; i++) {
                 updateProgress((i / files.length) * 100);
-                
-                const arrayBuffer = await files[i].arrayBuffer();
-                const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
+                const pdf = await PDFLib.PDFDocument.load(await files[i].arrayBuffer());
                 const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
                 copiedPages.forEach(page => mergedPdf.addPage(page));
-                
-                if (addBookmarks) {
-                    mergedPdf.setTitle(mergedPdf.getTitle() || `Merged PDF`);
-                    mergedPdf.addBookmark(files[i].name, { pageIndex: mergedPdf.getPageCount() - pdf.getPageCount() });
-                }
+                if (addBookmarks) mergedPdf.addBookmark(files[i].name, { pageIndex: mergedPdf.getPageCount() - pdf.getPageCount() });
             }
         } else {
             const pdfs = [];
             const maxPages = [];
-            
             for (let file of files) {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
+                const pdf = await PDFLib.PDFDocument.load(await file.arrayBuffer());
                 pdfs.push(pdf);
                 maxPages.push(pdf.getPageCount());
             }
-            
             const maxTotalPages = Math.max(...maxPages);
-            
             for (let pageNum = 0; pageNum < maxTotalPages; pageNum++) {
                 updateProgress((pageNum / maxTotalPages) * 100);
-                
                 for (let pdfIndex = 0; pdfIndex < pdfs.length; pdfIndex++) {
                     if (pageNum < maxPages[pdfIndex]) {
                         const [copiedPage] = await mergedPdf.copyPages(pdfs[pdfIndex], [pageNum]);
@@ -1027,135 +1021,46 @@
                 }
             }
         }
-        
         return await mergedPdf.save();
     }
 
     function parsePageRanges(rangeStr, totalPages) {
         const ranges = [];
         const parts = rangeStr.split(',');
-        
         for (let part of parts) {
             part = part.trim();
             if (part.includes('-')) {
                 const [start, end] = part.split('-').map(Number);
-                if (start >= 1 && end <= totalPages && start <= end) {
-                    ranges.push({start, end});
-                }
+                if (start >= 1 && end <= totalPages && start <= end) ranges.push({start, end});
             } else {
                 const page = parseInt(part);
-                if (page >= 1 && page <= totalPages) {
-                    ranges.push({start: page, end: page});
-                }
+                if (page >= 1 && page <= totalPages) ranges.push({start: page, end: page});
             }
         }
-        
         return ranges;
     }
 
-    // UPDATED: openInNewTab function with better print handling
-    function openInNewTab(bytes, filename, type) {
-        const blob = new Blob([bytes], { type: type });
+    function downloadPdf(bytes, filename) {
+        const blob = new Blob([bytes], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
-        
-        const newTab = window.open(url, '_blank');
-        
-        setTimeout(() => {
-            URL.revokeObjectURL(url);
-        }, 1000);
-        
-        if (newTab) {
-            newTab.onload = function() {
-                // Wait for PDF to load
-                setTimeout(() => {
-                    // Add a better print button with instructions
-                    const printBtn = newTab.document.createElement('div');
-                    printBtn.innerHTML = `
-                        <div style="
-                            position: fixed;
-                            bottom: 20px;
-                            right: 20px;
-                            z-index: 9999;
-                            text-align: center;
-                        ">
-                            <button id="printPdfBtn" style="
-                                padding: 12px 24px;
-                                background: #4f46e5;
-                                color: white;
-                                border: none;
-                                border-radius: 8px;
-                                font-size: 16px;
-                                font-weight: bold;
-                                cursor: pointer;
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                                transition: all 0.3s;
-                                margin-bottom: 8px;
-                                display: block;
-                                width: 180px;
-                            ">
-                                🖨️ Print PDF
-                            </button>
-                            <div style="
-                                background: #fef3c7;
-                                padding: 8px 12px;
-                                border-radius: 8px;
-                                font-size: 11px;
-                                color: #92400e;
-                                max-width: 200px;
-                                text-align: left;
-                                border: 1px solid #fde68a;
-                            ">
-                                💡 <strong>Print Tips:</strong><br>
-                                • Print dialogue mein <strong>"Fit to Page"</strong> select karein<br>
-                                • Scale: <strong>"Fit to Printable Area"</strong> chune<br>
-                                • Ya manually <strong>Scale: 95-98%</strong> set karein
-                            </div>
-                        </div>
-                    `;
-                    
-                    printBtn.querySelector('#printPdfBtn').onmouseover = function() {
-                        this.style.background = '#4338ca';
-                        this.style.transform = 'scale(1.05)';
-                    };
-                    printBtn.querySelector('#printPdfBtn').onmouseout = function() {
-                        this.style.background = '#4f46e5';
-                        this.style.transform = 'scale(1)';
-                    };
-                    printBtn.querySelector('#printPdfBtn').onclick = function() {
-                        newTab.print();
-                    };
-                    
-                    newTab.document.body.appendChild(printBtn);
-                }, 500);
-            };
-        }
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        showSuccessMessage();
     }
 
-    // Page range toggle for PDF to JPG
     document.getElementById('pageRange').addEventListener('change', function(e) {
-        document.getElementById('customRangeInput').style.display = 
-            e.target.value === 'custom' ? 'block' : 'none';
-    });
-
-    function estimateCompressedSize(file) {
-        if (file) {
-            const estimated = file.size * 0.6;
-            document.getElementById('estimated-size').innerText = 
-                "📉 Est: " + (estimated / 1024).toFixed(2) + " KB";
-        }
-    }
-
-    document.getElementById('targetSize').addEventListener('input', function() {
-        if (document.getElementById('fileInput').files.length > 0) {
-            estimateCompressedSize(document.getElementById('fileInput').files[0]);
-        }
+        document.getElementById('customRangeInput').style.display = e.target.value === 'custom' ? 'block' : 'none';
     });
     
-    document.getElementById('sizeUnit').addEventListener('change', function() {
-        if (document.getElementById('fileInput').files.length > 0) {
-            estimateCompressedSize(document.getElementById('fileInput').files[0]);
-        }
+    document.getElementById('targetSize')?.addEventListener('input', function() {
+        if (document.getElementById('fileInput').files.length > 0) estimateCompressedSize();
     });
+    
+    // Initialize compress level
+    selectCompressLevel('medium');
 </script>
 
 </body>
