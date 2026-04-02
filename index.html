@@ -14,6 +14,23 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
         .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 600px; text-align: center; }
         
+        /* Print styles for better PDF printing */
+        @media print {
+            body { 
+                margin: 0; 
+                padding: 0;
+                background: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+            /* Ensure content fits on page */
+            embed, iframe, object {
+                max-width: 100% !important;
+                max-height: 100% !important;
+            }
+        }
+        
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
         .tab-btn { padding: 12px; border: none; background: #e5e7eb; cursor: pointer; border-radius: 8px; font-weight: bold; min-width: 90px; transition: all 0.3s; font-size: 0.9rem; }
         .tab-btn.active { background: var(--primary); color: white; transform: scale(1.02); }
@@ -66,6 +83,16 @@
         .split-preview { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
         .split-page { width: 60px; height: 80px; border: 2px solid #e5e7eb; border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem; }
         .split-page.selected { border-color: var(--primary); background: #eef2ff; }
+        
+        /* Print info box */
+        .print-info {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
@@ -103,6 +130,17 @@
             <option value="2">2 images per page</option>
             <option value="4">4 images per page</option>
         </select>
+        
+        <!-- NEW: Print optimization option -->
+        <div class="checkbox-group" style="margin-top: 10px;">
+            <label><input type="checkbox" id="optimizeForPrint" checked> 🖨️ Optimize for Print (Auto-fit to page)</label>
+        </div>
+        
+        <div class="print-info" id="printInfoMsg">
+            💡 <strong>Print Karne Ka Sahi Tarika:</strong><br>
+            Jab PDF open ho, <strong>right-click → Print</strong> karein, ya <strong>Ctrl+P</strong> press karein.<br>
+            Print dialogue mein <strong>"Fit to Page"</strong> ya <strong>"Scale to Fit"</strong> option select karein.
+        </div>
     </div>
 
     <!-- Compress PDF Options -->
@@ -308,7 +346,6 @@
         const files = dt.files;
         
         if (mode === 'merge') {
-            // For merge mode, add to mergeFiles array
             for (let file of files) {
                 if (file.type === 'application/pdf') {
                     mergeFiles.push(file);
@@ -326,14 +363,12 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-' + m).classList.add('active');
         
-        // Hide all control groups
         document.getElementById('jpg-to-pdf-controls').style.display = 'none';
         document.getElementById('compress-controls').style.display = 'none';
         document.getElementById('pdf-to-jpg-controls').style.display = 'none';
         document.getElementById('split-controls').style.display = 'none';
         document.getElementById('merge-controls').style.display = 'none';
         
-        // Show relevant controls
         document.getElementById(m + '-controls').style.display = 'block';
         
         const labels = {
@@ -415,17 +450,14 @@
                 for(let f of files) totalSize += f.size;
                 document.getElementById('orig-size').innerText = "📦 Total: " + (totalSize / 1024).toFixed(2) + " KB";
                 
-                // Show preview for split mode
                 if (mode === 'split' && files[0].type === 'application/pdf') {
                     showSplitPreview(files[0]);
                 }
                 
-                // Show preview for PDF to JPG mode
                 if (mode === 'pdf-to-jpg' && files[0].type === 'application/pdf') {
                     showPdfPreview(files[0]);
                 }
                 
-                // Estimate compressed size
                 if (mode === 'compress') {
                     estimateCompressedSize(files[0]);
                 }
@@ -580,8 +612,9 @@
             if (mode === 'jpg-to-pdf') {
                 const imagesPerPage = parseInt(document.getElementById('imagesPerPage').value);
                 const pageSize = document.querySelector('input[name="pageSize"]:checked').value;
+                const optimizeForPrint = document.getElementById('optimizeForPrint').checked;
                 
-                const pdfBytes = await convertImagesToPdf(files, imagesPerPage, pageSize);
+                const pdfBytes = await convertImagesToPdf(files, imagesPerPage, pageSize, optimizeForPrint);
                 showSuccessMessage();
                 openInNewTab(pdfBytes, 'converted.pdf', 'application/pdf');
             } 
@@ -659,11 +692,25 @@
         }
     }
 
-    // --- FUNCTION 1: JPG TO PDF ---
-    async function convertImagesToPdf(files, imagesPerPage, pageSize) {
+    // UPDATED: JPG to PDF with print optimization
+    async function convertImagesToPdf(files, imagesPerPage, pageSize, optimizeForPrint) {
         const pdfDoc = await PDFLib.PDFDocument.create();
         
+        // Standard page sizes in points (1 point = 1/72 inch)
+        const PAGE_SIZES = {
+            a4: { width: 595, height: 842 },      // A4 in points
+            letter: { width: 612, height: 792 },   // Letter in points
+            auto: null
+        };
+        
+        // If optimize for print is ON, use standard page size
+        const useStandardSize = optimizeForPrint && pageSize !== 'auto';
+        
         const getPageDimensions = (imgWidth, imgHeight) => {
+            if (useStandardSize && pageSize !== 'auto') {
+                return PAGE_SIZES[pageSize];
+            }
+            
             switch(pageSize) {
                 case 'a4': return { width: 595, height: 842 };
                 case 'letter': return { width: 612, height: 792 };
@@ -705,14 +752,29 @@
                     const col = index % cols;
                     const row = Math.floor(index / cols);
                     
-                    const x = col * cellWidth + (cellWidth - img.width) / 2;
-                    const y = dimensions.height - (row + 1) * cellHeight + (cellHeight - img.height) / 2;
+                    // Calculate scale to fit image in cell while maintaining aspect ratio
+                    let drawWidth = img.width;
+                    let drawHeight = img.height;
+                    
+                    if (optimizeForPrint && pageSize !== 'auto') {
+                        // Scale image to fit within cell
+                        const scale = Math.min(
+                            cellWidth / img.width,
+                            cellHeight / img.height,
+                            1.0
+                        );
+                        drawWidth = img.width * scale;
+                        drawHeight = img.height * scale;
+                    }
+                    
+                    const x = col * cellWidth + (cellWidth - drawWidth) / 2;
+                    const y = dimensions.height - (row + 1) * cellHeight + (cellHeight - drawHeight) / 2;
                     
                     page.drawImage(img, {
                         x: Math.max(0, x),
                         y: Math.max(0, y),
-                        width: img.width,
-                        height: img.height
+                        width: drawWidth,
+                        height: drawHeight
                     });
                 });
                 
@@ -723,7 +785,6 @@
         return await pdfDoc.save();
     }
 
-    // --- FUNCTION 2: COMPRESS PDF ---
     async function compressPdf(file, quality, compressType, removeMetadata) {
         const arrayBuffer = await file.arrayBuffer();
         
@@ -782,7 +843,6 @@
         }
     }
 
-    // --- FUNCTION 3: PDF TO JPG ---
     async function extractImagesFromPdf(file, quality, format, customPages = []) {
         const arrayBuffer = await file.arrayBuffer();
         const originalPdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
@@ -837,7 +897,6 @@
         });
     }
 
-    // --- FUNCTION 4: SPLIT PDF ---
     async function splitPdf(file, splitMode, createZip) {
         const arrayBuffer = await file.arrayBuffer();
         const sourcePdf = await PDFLib.PDFDocument.load(arrayBuffer);
@@ -848,7 +907,6 @@
             const pdfFolder = zip.folder("split-pdfs");
             
             if (splitMode === 'extract') {
-                // Extract selected pages as separate PDFs
                 const pages = Array.from(selectedPages).sort((a,b) => a - b);
                 for (let i = 0; i < pages.length; i++) {
                     updateProgress((i / pages.length) * 100);
@@ -880,7 +938,7 @@
                     pdfFolder.file(`part-${part + 1}.pdf`, pdfBytes);
                 }
             }
-            else { // range
+            else {
                 const rangeStr = document.getElementById('splitRange').value;
                 const ranges = parsePageRanges(rangeStr, totalPages);
                 
@@ -904,7 +962,6 @@
             
             return await zip.generateAsync({type: 'blob'});
         } else {
-            // Single PDF (first range or extract)
             let pageIndices = [];
             
             if (splitMode === 'extract') {
@@ -929,12 +986,10 @@
         }
     }
 
-    // --- FUNCTION 5: MERGE PDFS ---
     async function mergePdfs(files, order, addBookmarks) {
         const mergedPdf = await PDFLib.PDFDocument.create();
         
         if (order === 'sequential') {
-            // Sequential merge
             for (let i = 0; i < files.length; i++) {
                 updateProgress((i / files.length) * 100);
                 
@@ -945,16 +1000,13 @@
                 
                 if (addBookmarks) {
                     mergedPdf.setTitle(mergedPdf.getTitle() || `Merged PDF`);
-                    // Add bookmark for each file
                     mergedPdf.addBookmark(files[i].name, { pageIndex: mergedPdf.getPageCount() - pdf.getPageCount() });
                 }
             }
         } else {
-            // Interleave merge (alternate pages from each PDF)
             const pdfs = [];
             const maxPages = [];
             
-            // Load all PDFs first
             for (let file of files) {
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
@@ -979,7 +1031,6 @@
         return await mergedPdf.save();
     }
 
-    // Helper function to parse page ranges
     function parsePageRanges(rangeStr, totalPages) {
         const ranges = [];
         const parts = rangeStr.split(',');
@@ -1002,6 +1053,7 @@
         return ranges;
     }
 
+    // UPDATED: openInNewTab function with better print handling
     function openInNewTab(bytes, filename, type) {
         const blob = new Blob([bytes], { type: type });
         const url = URL.createObjectURL(blob);
@@ -1014,36 +1066,67 @@
         
         if (newTab) {
             newTab.onload = function() {
-                const printBtn = newTab.document.createElement('button');
-                printBtn.innerHTML = '🖨️ Print this PDF';
-                printBtn.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    padding: 12px 24px;
-                    background: #4f46e5;
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    z-index: 9999;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    transition: all 0.3s;
-                `;
-                printBtn.onmouseover = function() {
-                    this.style.background = '#4338ca';
-                    this.style.transform = 'scale(1.05)';
-                };
-                printBtn.onmouseout = function() {
-                    this.style.background = '#4f46e5';
-                    this.style.transform = 'scale(1)';
-                };
-                printBtn.onclick = function() {
-                    newTab.print();
-                };
-                newTab.document.body.appendChild(printBtn);
+                // Wait for PDF to load
+                setTimeout(() => {
+                    // Add a better print button with instructions
+                    const printBtn = newTab.document.createElement('div');
+                    printBtn.innerHTML = `
+                        <div style="
+                            position: fixed;
+                            bottom: 20px;
+                            right: 20px;
+                            z-index: 9999;
+                            text-align: center;
+                        ">
+                            <button id="printPdfBtn" style="
+                                padding: 12px 24px;
+                                background: #4f46e5;
+                                color: white;
+                                border: none;
+                                border-radius: 8px;
+                                font-size: 16px;
+                                font-weight: bold;
+                                cursor: pointer;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                                transition: all 0.3s;
+                                margin-bottom: 8px;
+                                display: block;
+                                width: 180px;
+                            ">
+                                🖨️ Print PDF
+                            </button>
+                            <div style="
+                                background: #fef3c7;
+                                padding: 8px 12px;
+                                border-radius: 8px;
+                                font-size: 11px;
+                                color: #92400e;
+                                max-width: 200px;
+                                text-align: left;
+                                border: 1px solid #fde68a;
+                            ">
+                                💡 <strong>Print Tips:</strong><br>
+                                • Print dialogue mein <strong>"Fit to Page"</strong> select karein<br>
+                                • Scale: <strong>"Fit to Printable Area"</strong> chune<br>
+                                • Ya manually <strong>Scale: 95-98%</strong> set karein
+                            </div>
+                        </div>
+                    `;
+                    
+                    printBtn.querySelector('#printPdfBtn').onmouseover = function() {
+                        this.style.background = '#4338ca';
+                        this.style.transform = 'scale(1.05)';
+                    };
+                    printBtn.querySelector('#printPdfBtn').onmouseout = function() {
+                        this.style.background = '#4f46e5';
+                        this.style.transform = 'scale(1)';
+                    };
+                    printBtn.querySelector('#printPdfBtn').onclick = function() {
+                        newTab.print();
+                    };
+                    
+                    newTab.document.body.appendChild(printBtn);
+                }, 500);
             };
         }
     }
@@ -1054,7 +1137,14 @@
             e.target.value === 'custom' ? 'block' : 'none';
     });
 
-    // Update estimate when target size changes
+    function estimateCompressedSize(file) {
+        if (file) {
+            const estimated = file.size * 0.6;
+            document.getElementById('estimated-size').innerText = 
+                "📉 Est: " + (estimated / 1024).toFixed(2) + " KB";
+        }
+    }
+
     document.getElementById('targetSize').addEventListener('input', function() {
         if (document.getElementById('fileInput').files.length > 0) {
             estimateCompressedSize(document.getElementById('fileInput').files[0]);
