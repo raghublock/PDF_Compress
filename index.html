@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro PDF Tool - Raghuveer (Complete)</title>
+    <title>Pro PDF Tool - Raghuveer</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -190,7 +190,7 @@
         </div>
     </div>
 
-    <!-- SMART COMPRESS PDF Options - IMPROVED -->
+    <!-- SMART COMPRESS PDF Options -->
     <div id="compress-controls" class="control-group" style="display:none;">
         <h4 style="margin-top: 0;">📦 Smart PDF Compression</h4>
         
@@ -227,7 +227,7 @@
         </div>
         
         <div class="checkbox-group">
-            <label><input type="checkbox" id="removeMetadata" checked> 🗑️ Remove Metadata (Author, Date, etc.)</label>
+            <label><input type="checkbox" id="removeMetadata" checked> 🗑️ Remove Metadata</label>
             <label><input type="checkbox" id="compressImages" checked> 🖼️ Compress Images</label>
             <label><input type="checkbox" id="removeUnused" checked> 🧹 Remove Unused Objects</label>
         </div>
@@ -302,9 +302,7 @@
     <div id="merge-controls" class="control-group" style="display:none;">
         <h4 style="margin-top: 0;">🔗 Merge PDF Options</h4>
         
-        <div id="mergeFileList" class="file-list">
-            <!-- Files will be listed here -->
-        </div>
+        <div id="mergeFileList" class="file-list"></div>
         
         <button class="btn-main" style="background: #10b981; margin-top: 10px;" onclick="addMoreFiles()">➕ Add More PDFs</button>
         
@@ -318,14 +316,12 @@
         
         <div class="checkbox-group">
             <label><input type="checkbox" id="addBookmarks"> Add Bookmarks</label>
-            <label><input type="checkbox" id="mergeTableOfContents"> Add Table of Contents</label>
         </div>
     </div>
 
     <div class="stats" id="size-info" style="display:none;">
         <span id="file-count">Files: 0</span>
         <span id="orig-size">Size: 0 KB</span>
-        <span id="estimated-size" style="color:#059669;">Est: -</span>
     </div>
 
     <div class="progress-bar" id="progressBar">
@@ -337,10 +333,10 @@
     </div>
     
     <div id="successMessage" class="success-message">
-        ✅ Processing Complete! Download start ho jayega...
+        ✅ Processing Complete! New tab mein open ho raha hai...
     </div>
     
-    <button class="btn-main" id="processBtn" onclick="startProcessing()">✨ Process</button>
+    <button class="btn-main" id="processBtn" onclick="startProcessing()">✨ Process & Open in New Tab</button>
 </div>
 
 <script>
@@ -351,7 +347,6 @@
     let currentCompressLevel = 'medium';
     let originalFileSize = 0;
     
-    // Compression presets
     const compressPresets = {
         low: { imageQuality: 0.9 },
         medium: { imageQuality: 0.75 },
@@ -362,7 +357,6 @@
         currentCompressLevel = level;
         document.querySelectorAll('.level-option').forEach(opt => opt.classList.remove('selected'));
         document.querySelector(`.level-option[data-level="${level}"]`).classList.add('selected');
-        
         const preset = compressPresets[level];
         document.getElementById('imageQuality').value = preset.imageQuality * 100;
         updateQualityLabel();
@@ -391,14 +385,6 @@
         return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
     }
 
-    // Toggle compress mode
-    document.querySelectorAll('input[name="compressMode"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            document.getElementById('quality-control').style.display = this.value === 'quality' ? 'block' : 'none';
-            document.getElementById('size-control').style.display = this.value === 'size' ? 'block' : 'none';
-        });
-    });
-
     // Toggle split mode controls
     document.querySelectorAll('input[name="splitMode"]').forEach(radio => {
         radio.addEventListener('change', function() {
@@ -408,7 +394,6 @@
         });
     });
 
-    // Drag & Drop
     const dropZone = document.getElementById('dropZone');
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
@@ -686,7 +671,8 @@
                 const pageSize = document.querySelector('input[name="pageSize"]:checked').value;
                 const optimizeForPrint = document.getElementById('optimizeForPrint').checked;
                 const pdfBytes = await convertImagesToPdf(files, imagesPerPage, pageSize, optimizeForPrint);
-                downloadPdf(pdfBytes, 'converted.pdf');
+                showSuccessMessage();
+                openInNewTab(pdfBytes, 'converted.pdf', 'application/pdf');
             } 
             else if (mode === 'compress') {
                 const imageQuality = document.getElementById('imageQuality').value / 100;
@@ -698,7 +684,8 @@
                 const pdfBytes = await smartCompressPdf(files[0], {
                     imageQuality, removeMetadata, compressImages, removeUnused, linearize
                 });
-                downloadPdf(pdfBytes, 'compressed.pdf');
+                showSuccessMessage();
+                openInNewTab(pdfBytes, 'compressed.pdf', 'application/pdf');
             } 
             else if (mode === 'pdf-to-jpg') {
                 const quality = document.getElementById('jpgQuality').value / 100;
@@ -709,8 +696,8 @@
                     pagesToConvert = Array.from(selectedPages).sort((a,b) => a - b);
                 }
                 const zipBlob = await extractImagesFromPdf(files[0], quality, format, pagesToConvert);
-                saveAs(zipBlob, 'extracted-images.zip');
                 showSuccessMessage();
+                saveAs(zipBlob, 'extracted-images.zip');
             }
             else if (mode === 'split') {
                 const splitMode = document.querySelector('input[name="splitMode"]:checked').value;
@@ -719,19 +706,22 @@
                 const result = await splitPdf(files[0], splitMode, createZip);
                 if (createZip) {
                     saveAs(result, 'split-pages.zip');
+                    showSuccessMessage();
                 } else {
-                    downloadPdf(result, 'split-page.pdf');
+                    showSuccessMessage();
+                    openInNewTab(result, 'split-page.pdf', 'application/pdf');
                 }
             }
             else if (mode === 'merge') {
                 const order = document.getElementById('mergeOrder').value;
                 const addBookmarks = document.getElementById('addBookmarks').checked;
                 const pdfBytes = await mergePdfs(files, order, addBookmarks);
-                downloadPdf(pdfBytes, 'merged.pdf');
+                showSuccessMessage();
+                openInNewTab(pdfBytes, 'merged.pdf', 'application/pdf');
             }
             
             updateProgress(100);
-            showSuccessMessage();
+            setTimeout(() => document.getElementById('progressBar').style.display = 'none', 1000);
             
         } catch (e) {
             alert("❌ Kuch gadbad hui: " + e.message);
@@ -739,11 +729,10 @@
         } finally {
             loader.style.display = 'none';
             btn.disabled = false;
-            setTimeout(() => document.getElementById('progressBar').style.display = 'none', 1000);
         }
     }
 
-    // SMART COMPRESS FUNCTION - Text quality preserve
+    // SMART COMPRESS - Text quality preserve
     async function smartCompressPdf(file, options) {
         const arrayBuffer = await file.arrayBuffer();
         const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
@@ -1040,26 +1029,126 @@
         return ranges;
     }
 
-    function downloadPdf(bytes, filename) {
-        const blob = new Blob([bytes], { type: 'application/pdf' });
+    // OPEN IN NEW TAB with Print and Download buttons
+    function openInNewTab(bytes, filename, type) {
+        const blob = new Blob([bytes], { type: type });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-        showSuccessMessage();
+        
+        const newTab = window.open(url, '_blank');
+        
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+        }, 1000);
+        
+        if (newTab) {
+            newTab.onload = function() {
+                setTimeout(() => {
+                    // Create a floating action panel
+                    const actionPanel = newTab.document.createElement('div');
+                    actionPanel.innerHTML = `
+                        <div style="
+                            position: fixed;
+                            bottom: 20px;
+                            right: 20px;
+                            z-index: 9999;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 10px;
+                            font-family: 'Segoe UI', sans-serif;
+                        ">
+                            <button id="printPdfBtn" style="
+                                padding: 12px 24px;
+                                background: #4f46e5;
+                                color: white;
+                                border: none;
+                                border-radius: 10px;
+                                font-size: 14px;
+                                font-weight: bold;
+                                cursor: pointer;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                                transition: all 0.3s;
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                            ">
+                                🖨️ Print PDF
+                            </button>
+                            <button id="downloadPdfBtn" style="
+                                padding: 12px 24px;
+                                background: #10b981;
+                                color: white;
+                                border: none;
+                                border-radius: 10px;
+                                font-size: 14px;
+                                font-weight: bold;
+                                cursor: pointer;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                                transition: all 0.3s;
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                            ">
+                                💾 Download PDF
+                            </button>
+                            <div style="
+                                background: #fef3c7;
+                                padding: 10px 15px;
+                                border-radius: 10px;
+                                font-size: 11px;
+                                color: #92400e;
+                                max-width: 220px;
+                                text-align: left;
+                                border: 1px solid #fde68a;
+                                margin-top: 5px;
+                            ">
+                                💡 <strong>Print Tips:</strong><br>
+                                • Print dialogue mein <strong>"Fit to Page"</strong> select karein<br>
+                                • Scale: <strong>"Fit to Printable Area"</strong> chune<br>
+                                • Ya manually <strong>Scale: 95-98%</strong> set karein
+                            </div>
+                        </div>
+                    `;
+                    
+                    const printBtn = actionPanel.querySelector('#printPdfBtn');
+                    const downloadBtn = actionPanel.querySelector('#downloadPdfBtn');
+                    
+                    printBtn.onmouseover = () => {
+                        printBtn.style.background = '#4338ca';
+                        printBtn.style.transform = 'scale(1.05)';
+                    };
+                    printBtn.onmouseout = () => {
+                        printBtn.style.background = '#4f46e5';
+                        printBtn.style.transform = 'scale(1)';
+                    };
+                    printBtn.onclick = () => {
+                        newTab.print();
+                    };
+                    
+                    downloadBtn.onmouseover = () => {
+                        downloadBtn.style.background = '#059669';
+                        downloadBtn.style.transform = 'scale(1.05)';
+                    };
+                    downloadBtn.onmouseout = () => {
+                        downloadBtn.style.background = '#10b981';
+                        downloadBtn.style.transform = 'scale(1)';
+                    };
+                    downloadBtn.onclick = () => {
+                        const link = newTab.document.createElement('a');
+                        link.href = url;
+                        link.download = filename;
+                        link.click();
+                    };
+                    
+                    newTab.document.body.appendChild(actionPanel);
+                }, 500);
+            };
+        }
     }
 
     document.getElementById('pageRange').addEventListener('change', function(e) {
         document.getElementById('customRangeInput').style.display = e.target.value === 'custom' ? 'block' : 'none';
     });
     
-    document.getElementById('targetSize')?.addEventListener('input', function() {
-        if (document.getElementById('fileInput').files.length > 0) estimateCompressedSize();
-    });
-    
-    // Initialize compress level
     selectCompressLevel('medium');
 </script>
 
